@@ -1,0 +1,6 @@
+5
+agent,Popescu,Andrei,andrei@email.com,3000,12.0
+ghid,Ionescu,Maria,maria@email.com,800,1
+agent,Stanescu,Cristian,cristian@email.com,3100,15.0
+ghid,Georgescu,Elena,elena@email.com,2900,2
+director,Vasilescu,Ioana,ioana@email.com,10000
