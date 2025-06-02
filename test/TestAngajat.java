@@ -1,6 +1,10 @@
 package test;
 
-import model.*;
+import main.domain.AgentVanzari;
+import main.domain.Angajat;
+import main.domain.Director;
+import main.domain.Ghid;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -45,5 +49,6 @@ import java.util.Scanner;
             }
         }
     }
+
 
 
