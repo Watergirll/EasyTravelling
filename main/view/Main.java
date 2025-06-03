@@ -2,6 +2,7 @@ package main.view;
 
 import test.TestAngajat;
 import main.service.RezervareService;
+import main.service.AuditService;
 import main.controller.LocatieController;
 import main.controller.ServiciuController;
 import main.controller.ReportController;
@@ -9,19 +10,32 @@ import main.controller.AdminController;
 import main.persistence.ClientRepository;
 import main.controller.UnifiedAuthController;
 import main.domain.Client;
+import main.domain.Angajat;
+import main.domain.Director;
+import main.domain.Ghid;
+import main.domain.AgentVanzari;
 import java.util.Scanner;
 import java.util.List;
+import main.controller.CatalogController;
 
 public class Main {
     private static final Scanner sc = new Scanner(System.in);
     private static ClientRepository clientRepository = new ClientRepository();
-    private static UnifiedAuthController authController = new UnifiedAuthController();
+    private static AuditService auditService = AuditService.getInstance();
     
-    // Adaugam controller-ele noi
-    private static LocatieController locatieController = new LocatieController();
-    private static ServiciuController serviciuController = new ServiciuController();
-    private static ReportController reportController = new ReportController();
-    private static AdminController adminController = new AdminController();
+    // Controllers - initializati lazy pentru a evita duplicarile
+    private static UnifiedAuthController authController;
+    private static LocatieController locatieController;
+    private static ServiciuController serviciuController;
+    private static ReportController reportController;
+    private static AdminController adminController;
+    private static CatalogController catalogController;
+    
+    // Views - initializati lazy
+    private static AuthView authView;
+    private static ClientView clientView;
+    private static DirectorView directorView;
+    private static AngajatView angajatView;
 
     public static void main(String[] args) {
         // Incarcam clientii din CSV
@@ -32,65 +46,67 @@ public class Main {
             System.out.println("Eroare la incarcarea clientilor: " + e.getMessage());
         }
 
-        // Meniul principal cu 10 actiuni
-        boolean running = true;
-        while (running) {
-            afiseazaMeniuPrincipal();
+        // Initializez view-urile - ACEASTA VA CREA authController PENTRU PRIMA OARA
+        initializeViews();
+        
+        authView.afiseazaWelcomeMessage();
+        
+        // Bucla principala - primul pas este INTOTDEAUNA autentificarea
+        boolean appRunning = true;
+        while (appRunning) {
+            // Afiseaza meniul de autentificare
+            authView.afiseazaMeniuPrincipal();
             String optiune = sc.nextLine().trim();
 
             switch (optiune) {
                 case "1":
-                    testeazaAngajati();
+                    handleAuthentication();
                     break;
                 case "2":
-                    testeazaCreeareaUneiRezervari();
+                    auditService.logAction(AuditService.Actions.TEST_ANGAJATI);
+                    testeazaAngajati();
                     break;
                 case "3":
-                    authController.handleAuthMenu(sc);
+                    auditService.logAction(AuditService.Actions.TEST_REZERVARE);
+                    testeazaCreeareaUneiRezervari();
                     break;
                 case "4":
-                    locatieController.afiseazaLocatiiDisponibile(sc);
-                    break;
-                case "5":
-                    serviciuController.afiseazaServiciiDisponibile(sc);
-                    break;
-                case "6":
-                    adminController.afiseazaManagementAdmin(sc);
-                    break;
-                case "7":
-                    reportController.genereazaRapoarte(sc);
-                    break;
-                case "8":
-                    adminController.managementClienti(sc);
-                    break;
-                case "9":
-                    adminController.managementAngajati(sc);
-                    break;
-                case "10":
-                    System.out.println("La revedere!");
-                    running = false;
+                    authView.afiseazaGoodbyeMessage();
+                    appRunning = false;
                     break;
                 default:
-                    System.out.println("Optiune invalida!");
+                    authView.afiseazaOptiuneInvalida();
             }
         }
         
         sc.close();
     }
-
-    private static void afiseazaMeniuPrincipal() {
-        System.out.println("\n=== MENIU EASYTRAVELLING ===");
-        System.out.println("1. Testeaza angajati");
-        System.out.println("2. Testeaza creearea unei rezervari");
-        System.out.println("3. Autentificare / Cont client");
-        System.out.println("4. Cautare locatii turistice");
-        System.out.println("5. Cautare servicii disponibile");
-        System.out.println("6. Management rezervari (Admin)");
-        System.out.println("7. Rapoarte si statistici");
-        System.out.println("8. Management clienti (Admin)");
-        System.out.println("9. Management angajati (Admin)");
-        System.out.println("10. Iesire");
-        System.out.print("Alege optiunea: ");
+    
+    private static void handleAuthentication() {
+        Object currentUser = authView.handleAuthentication(sc);
+        
+        // Dupa autentificare, verifica tipul utilizatorului si redirectioneaza
+        if (currentUser != null) {
+            redirectToUserSpecificMenu(currentUser);
+        }
+    }
+    
+    private static void redirectToUserSpecificMenu(Object user) {
+        if (user instanceof Director) {
+            directorView.afiseazaAutentificareReusita();
+            directorView.afiseazaMeniuDirector(sc);
+        } else if (user instanceof Ghid) {
+            angajatView.afiseazaAutentificareReusita();
+            angajatView.afiseazaMeniuGhid((Ghid) user, sc);
+        } else if (user instanceof AgentVanzari) {
+            angajatView.afiseazaAutentificareReusita();
+            angajatView.afiseazaMeniuAgent((AgentVanzari) user, sc);
+        } else if (user instanceof Client) {
+            clientView.afiseazaAutentificareReusita();
+            clientView.afiseazaMeniuClient((Client) user, sc);
+        } else {
+            System.out.println("⚠ Tip de utilizator nerecunoscut!");
+        }
     }
 
     private static void testeazaAngajati() {
@@ -100,5 +116,32 @@ public class Main {
     private static void testeazaCreeareaUneiRezervari() {
         RezervareService service = new RezervareService();
         service.simuleazaRezervare(sc);
+    }
+
+    // Initializare lazy pentru controller-e si view-uri
+    private static void initializeControllers() {
+        if (authController == null) {
+            authController = new UnifiedAuthController(); // PRIMA INITIALIZARE
+        }
+        
+        if (locatieController == null) {
+            locatieController = new LocatieController();
+            serviciuController = new ServiciuController();
+            
+            // Foloseste aceeasi instanta de UserService pentru toate serviciile
+            reportController = new ReportController(authController.getUserService());
+            adminController = new AdminController(authController.getUserService());
+            catalogController = new CatalogController();
+        }
+    }
+    
+    private static void initializeViews() {
+        initializeControllers(); // Asigura ca avem controller-ii
+        
+        authView = new AuthView(authController);
+        clientView = new ClientView(authController, catalogController, locatieController, serviciuController);
+        directorView = new DirectorView(authController, adminController, reportController, 
+                                       catalogController, locatieController, serviciuController);
+        angajatView = new AngajatView(authController, catalogController, locatieController, serviciuController);
     }
 } 

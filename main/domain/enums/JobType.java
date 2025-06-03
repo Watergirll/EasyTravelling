@@ -2,7 +2,8 @@ package main.domain.enums;
 
 public enum JobType {
     GHID("Ghid turistic", "Turism", 1.1),
-    AGENT_VANZARI("Agent vanzari", "Vanzari", 1.2);
+    AGENT_VANZARI("Agent vanzari", "Vanzari", 1.2),
+    DIRECTOR("Director", "Management", 1.5);
 
     private final String titlu;
     private final String departament;

@@ -1,6 +1,7 @@
 package main.controller;
 
 import main.service.AdminService;
+import main.service.AuditService;
 import main.domain.*;
 import main.domain.enums.JobType;
 import java.util.List;
@@ -9,9 +10,19 @@ import java.util.ArrayList;
 
 public class AdminController {
     private AdminService adminService;
+    private AuditService auditService;
 
     public AdminController() {
         this.adminService = new AdminService();
+        this.auditService = AuditService.getInstance();
+    }
+    
+    /**
+     * Constructor cu UserService partajat
+     */
+    public AdminController(main.service.UserService sharedUserService) {
+        this.adminService = new AdminService(sharedUserService);
+        this.auditService = AuditService.getInstance();
     }
 
     // =============== ENTRY POINT PENTRU ADMIN MANAGEMENT ===============
@@ -284,6 +295,7 @@ public class AdminController {
         boolean actualizat = adminService.actualizeazaClient(client);
         
         if (actualizat) {
+            auditService.logAction(AuditService.Actions.UPDATE_CLIENT);
             System.out.println("✅ Clientul a fost actualizat cu succes!");
         } else {
             System.out.println("❌ Nu s-a putut actualiza clientul!");
@@ -309,6 +321,7 @@ public class AdminController {
             boolean sters = adminService.stergeClient(email);
             
             if (sters) {
+                auditService.logAction(AuditService.Actions.DELETE_CLIENT);
                 System.out.println("✅ Clientul a fost sters cu succes!");
             } else {
                 System.out.println("❌ Nu s-a putut sterge clientul!");
@@ -522,6 +535,7 @@ public class AdminController {
         boolean adaugat = adminService.adaugaAngajat(angajatNou);
         
         if (adaugat) {
+            auditService.logAction(AuditService.Actions.CREATE_ANGAJAT);
             System.out.println("✅ Angajatul a fost adaugat cu succes!");
         } else {
             System.out.println("❌ Nu s-a putut adauga angajatul!");
@@ -568,6 +582,7 @@ public class AdminController {
         boolean actualizat = adminService.actualizeazaAngajat(angajat);
         
         if (actualizat) {
+            auditService.logAction(AuditService.Actions.UPDATE_ANGAJAT);
             System.out.println("✅ Angajatul a fost actualizat cu succes!");
         } else {
             System.out.println("❌ Nu s-a putut actualiza angajatul!");
@@ -593,6 +608,7 @@ public class AdminController {
             boolean sters = adminService.stergeAngajat(email);
             
             if (sters) {
+                auditService.logAction(AuditService.Actions.DELETE_ANGAJAT);
                 System.out.println("✅ Angajatul a fost sters cu succes!");
             } else {
                 System.out.println("❌ Nu s-a putut sterge angajatul!");

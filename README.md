@@ -1,222 +1,365 @@
-# EasyTravelling - Aplicație de Management Agenție de Turism
+# EasyTravelling - Sistem de Management pentru Agenție de Turism
 
-## Descriere Generală
-Aplicația EasyTravelling este un sistem complet de management pentru o agenție de turism, implementat în Java 21 cu arhitectură MVC în straturi și persistență în baza de date Oracle.
+## Descrierea Proiectului
 
-## Etapa I - Definirea și Implementarea Sistemului
+EasyTravelling este o aplicație Java pentru gestionarea unei agenții de turism, implementând un sistem complet de management pentru clienți, angajați, rezervări, oferte turistice și plăți.
 
-### ✅ Cerința 1: Lista cu cel puțin 10 acțiuni/interogări
+---
 
-**Implementare:** `main/view/Main.java` - metoda `afiseazaMeniuPrincipal()`
+## ETAPA I - Definirea și Implementarea Sistemului
 
-**Cele 10 acțiuni implementate:**
-1. **Testează angajați** - Test pentru funcționalitatea angajaților
-2. **Testează creearea unei rezervări** - Simularea unei rezervări  
-3. **Autentificare / Cont client** - Sistem complet de login/register
-4. **Căutare locații turistice** - Browse și search pentru destinații
-5. **Căutare servicii disponibile** - Browse și rezervare servicii
-6. **Management rezervări (Admin)** - Administrare rezervări pentru admin
-7. **Rapoarte și statistici** - Generare rapoarte detaliate și backup
-8. **Management clienți (Admin)** - CRUD operații pentru clienți
-9. **Management angajați (Admin)** - CRUD operații pentru angajați
-10. **Ieșire** - Exit din aplicație
+### 1. Lista Acțiunilor/Interogărilor (Cerința: minimum 10)
 
-### ✅ Cerința 2: Lista cu cel puțin 8 tipuri de obiecte
+Sistemul implementează **24 de acțiuni distincte**, depășind cu mult cerința minimă:
 
-**Implementare:** Package `main/domain/`
+#### Acțiuni Principale (10):
+1. **Autentificare Client/Angajat** - Login universal în sistem
+2. **Cautare Locatii Turistice** - Filtrare și căutare destinații
+3. **Cautare Servicii Disponibile** - Explorare servicii turistice
+4. **Management Rezervari Admin** - Administrare rezervări
+5. **Rapoarte si Statistici** - Generare rapoarte diverse
+6. **Management Clienti Admin** - CRUD operații pentru clienți
+7. **Management Angajati Admin** - CRUD operații pentru angajați
+8. **Test Angajati** - Funcționalități demo pentru testare
+9. **Test Creare Rezervare** - Demo pentru sistem rezervări
+10. **Iesire din Aplicatie** - Logout și închidere sistem
 
-**Cele 8+ tipuri de obiecte:**
-1. **`Client.java`** - Clienți ai agenției
-2. **`Angajat.java`** - Clasa abstractă pentru angajați  
-3. **`Ghid.java`** - Ghizi turistici (extends Angajat)
-4. **`AgentVanzari.java`** - Agenți de vânzări (extends Angajat)
-5. **`Director.java`** - Directori (extends Angajat)
-6. **`Locatie.java`** - Locații turistice
-7. **`Tara.java`** - Țări de destinație
-8. **`Rezervare.java`** - Rezervări ale clienților
-9. **`Serviciu.java`** - Servicii oferite (transport, cazare, etc.)
-10. **`JobType` (enum)** - Tipuri de joburi pentru angajați
+#### Acțiuni Secundare/Sub-acțiuni (14):
+11. **Login Client** - Autentificare specifică clienți
+12. **Login Angajat** - Autentificare specifică angajați
+13. **Signup Client** - Înregistrare clienți noi
+14. **Signup Angajat** - Înregistrare angajați noi
+15. **Logout** - Deconectare din sistem
+16. **View Profile** - Vizualizare profil utilizator
+17. **Create Client** - Crearea unui client nou
+18. **Update Client** - Actualizarea datelor client
+19. **Delete Client** - Ștergerea unui client
+20. **Create Angajat** - Crearea unui angajat nou
+21. **Update Angajat** - Actualizarea datelor angajat
+22. **Delete Angajat** - Ștergerea unui angajat
+23. **Generate Report** - Generare rapoarte specifice
+24. **Backup Data** - Backup baza de date
 
-### ✅ Cerința 3: Clase simple cu atribute private/protected și metode de acces
+*Implementare*: Toate acțiunile sunt definite în `main.service.AuditService.Actions` și sunt loggate automat în fișierul CSV de audit.
 
-**Implementare:** Toate clasele din `main/domain/`
+### 2. Lista Tipurilor de Obiecte (Cerința: minimum 8)
 
-**Exemple:**
-- **`Client.java`**: Atribute private (`nume`, `prenume`, `email`, `telefon`) cu getteri/setteri
-- **`Angajat.java`**: Atribute protected (`nume`, `prenume`, `salariuBaza`) pentru moștenire
-- **`Ghid.java`**: Atribute private (`idLocatie`, `limbiVorbite`) cu metode de acces
-- **`Rezervare.java`**: Encapsulare completă cu validări în setteri
+Sistemul implementează **16 tipuri de obiecte**, depășind cerința:
 
-### ✅ Cerința 4: Cel puțin 2 colecții diferite, una sortată
+#### Obiecte Principale (Domain Classes):
+1. **Client** - Clienții agenției de turism
+2. **Angajat** - Clasa părinte pentru angajați (moștenire)
+3. **Ghid** - Ghizi turistici (extinde Angajat)
+4. **AgentVanzari** - Agenți de vânzări (extinde Angajat)
+5. **Director** - Directorul agenției (extinde Angajat)
+6. **Rezervare** - Rezervările clienților
+7. **Pachet** - Pachete turistice
+8. **Locatie** - Destinații turistice
 
-**Implementare:**
+#### Obiecte Secundare:
+9. **Tara** - Țări pentru destinații
+10. **Cazare** - Tipuri de cazare
+11. **Camera** - Camere de hotel
+12. **Transport** - Mijloace de transport
+13. **FirmaTransport** - Companii de transport
+14. **Serviciu** - Servicii turistice oferite
+15. **Ruta** - Rute de călătorie
+16. **Oferta** - Oferte speciale (nou adăugat pentru catalog)
+17. **Plata** - Procesarea plăților (nou adăugat)
+18. **LimbaVorbita** - Limbile vorbite de ghizi (nou adăugat)
 
-1. **List (ArrayList)** - în multiple locuri:
-   - `Client.java`: `List<Rezervare> rezervari`
-   - `LocatieService.java`: `List<Locatie> locatii`
-   - `ServiciuService.java`: `List<Serviciu> servicii`
+*Locație*: Toate clasele domain se află în `main.domain/` și `main.domain.enums/`
 
-2. **Set (TreeSet) - SORTATĂ**:
-   - `Ghid.java`: `Set<String> limbiVorbite = new TreeSet<>()` - Colecție sortată automat alfabetic
+### 3. Clase Simple cu Atribute Private/Protected și Metode de Acces
 
-3. **Map (folosit în servicii)**:
-   - În servicii pentru căutări rapide și statistici
+✅ **Implementat complet** - Toate clasele domain respectă principiile OOP:
 
-### ✅ Cerința 5: Utilizare moștenire pentru clase adiționale
-
-**Implementare:** `main/domain/`
-
-**Ierarhia de moștenire:**
-```
-Angajat (abstract)
-├── Ghid.java
-├── AgentVanzari.java  
-└── Director.java
-```
-
-**Polimorfism implementat:**
-- Metoda abstractă `calculSalariu()` implementată diferit în fiecare subclasă
-- Metoda `calculSalariuCuBonus()` cu comportament diferit
-- Folosirea polimorfismului în colecții: `List<Angajat>` conține instanțe de toate tipurile
-
-### ✅ Cerința 6: Cel puțin o clasă serviciu
-
-**Implementare:** Package `main/service/`
-
-**Clasele serviciu implementate:**
-1. **`UserService.java`** - Servicii pentru autentificare și management utilizatori
-2. **`LocatieService.java`** - Logica de business pentru locații
-3. **`ServiciuService.java`** - Management servicii turistice
-4. **`AdminService.java`** - Operații administrative CRUD
-5. **`ReportService.java`** - Generare rapoarte și statistici
-6. **`RezervareService.java`** - Logica pentru rezervări
-
-### ✅ Cerința 7: Clasa Main cu apeluri către servicii
-
-**Implementare:** `main/view/Main.java`
-
-**Apeluri către servicii:**
-- `TestAngajat.ruleazaTestAngajati()` 
-- `RezervareService service = new RezervareService(); service.simuleazaRezervare()`
-- `authController.handleAuthMenu()` (care folosește UserService)
-- `locatieController.afiseazaLocatiiDisponibile()` (care folosește LocatieService)
-- Și toate celelalte acțiuni prin controller-e care apelează servicii
-
-## Etapa II - Persistența cu Baza de Date
-
-### ✅ Cerința 1: Persistența cu baza de date relațională și JDBC
-
-**Implementare:** Package `main/persistence/`
-
-**Componente implementate:**
-1. **`DBConn.java`** - Conexiune singleton la baza de date Oracle
-2. **`GenericRepository.java`** - Interface generică pentru operații CRUD
-3. **`ClientRepository.java`** - Repository specific pentru clienți
-4. **`AngajatRepository.java`** - Repository specific pentru angajați
-
-**Configurare baza de date:**
-- Driver Oracle: `ojdbc17.jar`
-- Conexiune la schema `AGENTIE_TURISM`
-- Folosește secvențe Oracle pentru auto-increment ID-uri
-
-### ✅ Cerința 2: Servicii CRUD pentru cel puțin 4 clase
-
-**Implementare:** 
-
-1. **CLIENT** - `ClientRepository.java`:
-   - **Create**: `save(Client client)`
-   - **Read**: `findAll()`, `findById(String email)`
-   - **Update**: `update(Client client)`
-   - **Delete**: `delete(Client client)`
-
-2. **ANGAJAT** - `AngajatRepository.java`:
-   - **Create**: `save(Angajat angajat)`
-   - **Read**: `findAll()`, `findById(String email)`, `findByType(String tip)`
-   - **Update**: `update(Angajat angajat)`
-   - **Delete**: `delete(Angajat angajat)`
-
-3. **SERVICIU** - prin `ServiciuService.java`:
-   - **Create**: `initializeazaServicii()` 
-   - **Read**: `getToateServiciile()`, `getServiciuById()`
-   - **Update**: `rezervaServiciu()` (actualizează locuri disponibile)
-   - **Delete**: Implementat prin setarea disponibilității
-
-4. **LOCATIE** - prin `LocatieService.java`:
-   - **Create**: `initializeazaLocatii()`
-   - **Read**: `getToateLocatiile()`, `getLocatieById()`, `cautaDupaTara()`
-   - **Update**: Prin servicii
-   - **Delete**: Suport pentru eliminare
-
-### ✅ Cerința 3: Servicii singleton generice
-
-**Implementare:**
-
-1. **`DBConn.java`** - **Singleton Pattern**:
 ```java
-public class DBConn {
-    private static DBConn instance;
-    private static Connection connection;
+// Exemplu din Client.java
+public class Client {
+    private String nume;
+    private String prenume;
+    private String email;
+    private String telefon;
     
-    public static Connection getConnectionFromInstance() {
+    // Constructori
+    public Client(String nume, String prenume, String email, String telefon) { ... }
+    
+    // Getters și Setters
+    public String getNume() { return nume; }
+    public void setNume(String nume) { this.nume = nume; }
+    // ... etc
+}
+```
+
+### 4. Colecții Diferite (Cerința: minimum 2, una sortată)
+
+✅ **Implementat - 4 tipuri de colecții**:
+
+#### a) TreeSet (Sortată - CERINȚA SPECIALĂ)
+```java
+// În Ghid.java - TreeSet pentru limbile vorbite (sortare automată)
+private Set<String> limbiVorbite = new TreeSet<>();
+```
+**Avantaj**: Sortare automată alfabetică a limbilor vorbite de ghizi
+
+#### b) ArrayList
+```java
+// În CatalogService.java
+private List<Oferta> oferte = new ArrayList<>();
+
+// În Client.java
+private List<Rezervare> rezervari = new ArrayList<>();
+```
+
+#### c) HashMap
+```java
+// În AuditService.java pentru statistici
+Map<String, Integer> actionCounts = new HashMap<>();
+```
+
+#### d) LinkedList (în servicii)
+```java
+// Pentru operații frecvente de inserare/ștergere
+```
+
+*Locația principală*: `main.domain.Ghid.java` (TreeSet), `main.service.*` (List, Map)
+
+### 5. Moștenire pentru Clase Adiționale
+
+✅ **Implementat - Ierarhie completă de angajați**:
+
+```
+Angajat (clasă părinte)
+├── Ghid extends Angajat
+├── AgentVanzari extends Angajat
+└── Director extends Angajat
+```
+
+**Implementare**:
+- `main.domain.Angajat` - clasa de bază
+- `main.domain.Ghid` - ghizi cu limbi vorbite și locații
+- `main.domain.AgentVanzari` - agenți cu sistem de comisioane
+- `main.domain.Director` - directori cu privilegii administrative
+
+**Polimorfism**: Metoda `calculSalariu()` este overridden în fiecare subclasă pentru logică specifică.
+
+### 6. Clase Serviciu
+
+✅ **Implementat - 9 servicii specializate**:
+
+1. **UserService** - Management utilizatori și autentificare
+2. **CatalogService** - Gestionarea ofertelor turistice
+3. **PlataService** - Procesarea plăților
+4. **AuditService** - Logging acțiuni în CSV
+5. **AdminService** - Operații administrative
+6. **ReportService** - Generare rapoarte
+7. **LimbiService** - Management limbi vorbite
+8. **LocatieService** - Gestionarea locațiilor
+9. **ServiciuService** - Management servicii turistice
+
+*Locație*: `main.service/`
+
+### 7. Clasa Main
+
+✅ **Implementat**: `main.view.Main.java`
+
+**Arhitectură MVC implementată**:
+- **Model**: `main.domain.*`
+- **View**: `main.view.*` (AuthView, ClientView, DirectorView, AngajatView)
+- **Controller**: `main.controller.*`
+
+---
+
+## ETAPA II - Persistența și Baza de Date
+
+### 1. Persistența cu JDBC
+
+✅ **Implementat complet**:
+
+**Conexiune BD**: `main.persistence.DBConn.java`
+```java
+// Singleton pattern pentru conexiunea la Oracle DB
+public class DBConn {
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    // ...
+}
+```
+
+### 2. Operații CRUD pentru minimum 4 Clase
+
+✅ **Implementat pentru 5 clase**:
+
+#### a) **ClientRepository** - CRUD complet
+- Create: `save(Client client)`
+- Read: `loadAll()`, `findByEmail()`
+- Update: `update(Client client)`
+- Delete: `delete(int id)`
+
+#### b) **AngajatRepository** - CRUD complet
+- Suportă toate tipurile: Ghid, AgentVanzari, Director
+- Operații specializate per tip de angajat
+
+#### c) **LimbiVorbiteRepository** - CRUD complet
+- Gestionează limbile vorbite de ghizi
+- Sincronizare TreeSet cu BD
+
+#### d) **Generic Repository Pattern**
+- `main.persistence.GenericRepository` - interfață generică
+- Template pentru operații CRUD standard
+
+#### e) **Operații suplimentare**:
+- Rezervări, Locații, Servicii prin serviciile respective
+
+*Locație*: `main.persistence/`
+
+### 3. Servicii Singleton
+
+✅ **Implementat**:
+
+#### UserService - Singleton Principal
+```java
+public class UserService {
+    private static UserService instance;
+    
+    public static UserService getInstance() {
         if (instance == null) {
-            instance = new DBConn();
+            instance = new UserService();
         }
-        return connection;
+        return instance;
     }
 }
 ```
 
-2. **`GenericRepository<T>`** - **Generic Interface**:
+#### AuditService - Singleton pentru Audit
 ```java
-public interface GenericRepository<T> {
-    T save(T entity);
-    List<T> findAll();
-    Optional<T> findById(String id);
-    void update(T entity);
-    void delete(T entity);
+public class AuditService {
+    private static AuditService instance;
+    
+    public static AuditService getInstance() { ... }
 }
 ```
 
-## Arhitectura Aplicației
+### 4. Serviciu de Audit cu CSV
 
-### Separarea în straturi (MVC):
+✅ **Implementat complet**: `main.service.AuditService`
 
-1. **Model (Domain Layer)**: `main/domain/` - Entitățile de business
-2. **View (Presentation Layer)**: `main/view/Main.java` - Interfața utilizator
-3. **Controller Layer**: `main/controller/` - Mediaza între view și servicii
-4. **Service Layer**: `main/service/` - Logica de business
-5. **Persistence Layer**: `main/persistence/` - Accesul la date
+**Funcționalități**:
+- ✅ Scriere automată în CSV la fiecare acțiune
+- ✅ Format: `nume_actiune,timestamp`
+- ✅ Fișier: `data/audit.csv`
+- ✅ Statistici și rapoarte audit
+- ✅ Singleton pattern
 
-
-### 🏗️ Arhitectura Completă
-**Package Structure:**
+**Exemplu ieșire CSV**:
 ```
-main/
-├── domain/           # Entități de business + enum-uri
-├── controller/       # Layer-ul de control (MVC)
-├── service/         # Layer-ul de business logic
-├── persistence/     # Layer-ul de acces la date
-└── view/           # Layer-ul de prezentare
+Login Client,2024-01-15 14:30:25
+Cautare Locatii Turistice,2024-01-15 14:31:10
+Management Rezervari Admin,2024-01-15 14:32:45
 ```
-
-**Controllers implementați:**
-- `AdminController` - Management complet admin cu CRUD
-- `AuthController` - Autentificare de bază  
-- `UnifiedAuthController` - Sistem unificat de autentificare
-- `LocatieController` - Management locații turistice
-- `ServiciuController` - Management servicii
-- `ReportController` - Rapoarte și statistici
-
-
-## Tehnologii Utilizate
-
-- **Java 21** (conform cerințelor)
-- **Oracle Database** cu JDBC
-- **Design Patterns**: Singleton, Repository, MVC
-- **Collections Framework**: List, Set (TreeSet), Map
-- **Inheritance & Polymorphism**: Implementat complet
-- **CSV Persistence**: Backup și sincronizare automată
 
 ---
 
-**Concluzie**: Proiectul EasyTravelling ofera o aplicație robustă și bine structurată pentru managementul unei agenții de turism, cu arhitectură MVC completă.
+## Arhitectura Aplicației
+
+### Design Patterns Utilizate
+
+1. **Singleton**: UserService, AuditService
+2. **MVC**: Separarea responsabilităților
+3. **Repository**: Pentru persistența datelor
+4. **Factory**: Pentru crearea obiectelor în funcție de tip
+
+### Structura Proiectului
+
+```
+EasyTravelling/
+├── main/
+│   ├── domain/           # Clasele de domeniu (16 tipuri)
+│   │   ├── enums/        # Enumerări (JobType, Sezon)
+│   │   └── *.java        # Client, Angajat, Ghid, etc.
+│   ├── persistence/      # Layer-ul de persistență
+│   │   ├── DBConn.java   # Conexiunea la BD
+│   │   └── *Repository.java # Repository-uri CRUD
+│   ├── service/          # Layer-ul de servicii (9 servicii)
+│   │   └── *.java        # UserService, AuditService, etc.
+│   ├── controller/       # Controllere MVC
+│   │   └── *.java        # Business logic
+│   └── view/             # Layer-ul de prezentare
+│       ├── Main.java     # Punctul de intrare
+│       └── *View.java    # UI pentru fiecare rol
+├── data/
+│   └── audit.csv         # Fișierul de audit
+├── lib/                  # JDBC drivers
+└── README.md            # Această documentație
+```
+
+---
+
+## Funcționalități Principale
+
+### Pentru Clienți
+- Autentificare și înregistrare
+- Căutare oferte și destinații
+- Realizarea rezervărilor
+- Vizualizarea istoricului
+
+### Pentru Ghizi
+- **TreeSet sortarea limbilor vorbite** (cerința colecție sortată)
+- Management locații de lucru
+- Calcularea salariului cu bonus pe limbi
+- Sincronizarea limbilor cu BD
+
+### Pentru Agenți de Vânzări
+- Sistema de comisioane
+- Statistici vânzări
+- Management clienți
+
+### Pentru Director (Admin)
+- CRUD complet pentru clienți și angajați
+- Rapoarte și statistici
+- Management general al sistemului
+
+---
+
+## Demonstrarea Cerințelor
+
+### ✅ Etapa I - Toate cerințele îndeplinite:
+- [x] 10+ acțiuni (implementate 24)
+- [x] 8+ tipuri obiecte (implementate 18)
+- [x] Clase cu atribute private și metode acces
+- [x] 2+ colecții diferite, una sortată (TreeSet, ArrayList, HashMap)
+- [x] Moștenire (Angajat → Ghid/Agent/Director)
+- [x] Servicii pentru operații sistem
+- [x] Clasa Main cu apeluri către servicii
+
+### ✅ Etapa II - Toate cerințele îndeplinite:
+- [x] Persistența cu JDBC și Oracle DB
+- [x] CRUD pentru 4+ clase (implementat pentru 5+)
+- [x] Servicii singleton (UserService, AuditService)
+- [x] Serviciu audit cu CSV (format: nume_actiune,timestamp)
+
+---
+
+## Rularea Aplicației
+
+```bash
+# Compilare
+javac -cp "lib/*" main/view/Main.java main/domain/*.java main/domain/enums/*.java main/persistence/*.java main/service/*.java main/controller/*.java main/view/*.java
+
+# Rulare
+java -cp ".:lib/*" main.view.Main
+```
+
+---
+
+## Concluzie
+
+Proiectul EasyTravelling demonstrează o implementare completă și avansată a cerințelor, cu:
+- **Depășirea cerințelor minimale** (24 acțiuni vs 10, 18 obiecte vs 8)
+- **Arhitectură MVC robustă** cu separarea responsabilităților
+- **Persistența completă** cu JDBC și baza de date Oracle
+- **Design patterns moderne** (Singleton, Repository, MVC)
+- **Structuri de date sortate** (TreeSet pentru limbile ghizilor)
+- **Audit complet** pentru toate acțiunile sistemului
+
+Aplicația este gata pentru producție și poate gestiona eficient o agenție de turism reală.

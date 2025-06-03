@@ -25,6 +25,7 @@ public abstract class Angajat {
     // Constructor alternativ cu String pentru compatibilitate cu codul existent
     public Angajat(String nume, String prenume, String email, String jobTitlu, int salariuBaza) {
         this(nume, prenume, email, 
+             jobTitlu.toLowerCase().contains("director") ? JobType.DIRECTOR :
              jobTitlu.toLowerCase().contains("ghid") ? JobType.GHID : JobType.AGENT_VANZARI, 
              salariuBaza);
     }
@@ -68,7 +69,13 @@ public abstract class Angajat {
 
     // Metoda pentru compatibilitate cu codul existent
     public void setJob(String jobTitlu) {
-        this.jobType = jobTitlu.toLowerCase().contains("ghid") ? JobType.GHID : JobType.AGENT_VANZARI;
+        if (jobTitlu.toLowerCase().contains("director")) {
+            this.jobType = JobType.DIRECTOR;
+        } else if (jobTitlu.toLowerCase().contains("ghid")) {
+            this.jobType = JobType.GHID;
+        } else {
+            this.jobType = JobType.AGENT_VANZARI;
+        }
     }
 
     public int getSalariuBaza() {

@@ -4,6 +4,7 @@ import main.domain.Client;
 import main.domain.Angajat;
 import main.domain.Ghid;
 import main.domain.AgentVanzari;
+import main.domain.Director;
 import main.persistence.ClientRepository;
 import main.persistence.AngajatRepository;
 import java.io.*;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class UserService {
     private List<Object> utilizatoriMemorie = new ArrayList<>();
@@ -65,8 +67,18 @@ public class UserService {
             System.err.println("⚠ Continua doar cu CSV (fara sincronizare BD).");
         }
         
-        // Incarca automat utilizatorii la pornire
-        incarcaUseriDinFisier();
+        // Incarca automat utilizatorii la pornire (fara sincronizare automata)
+        incarcaUseriDinFisier(false);  // false = nu sincroniza automat
+    }
+    
+    /**
+     * Constructor cu optiunea de sincronizare
+     */
+    public UserService(boolean syncWithDatabase) {
+        this();
+        if (syncWithDatabase) {
+            syncAllWithDatabase();
+        }
     }
 
     // =============== AUTENTIFICARE ===============
@@ -95,10 +107,11 @@ public class UserService {
     }
 
     /**
-     * Returneaza tipul utilizatorului (CLIENT, GHID, AGENT)
+     * Returneaza tipul utilizatorului (CLIENT, GHID, AGENT, DIRECTOR)
      */
     public String getTipUtilizator(Object utilizator) {
         if (utilizator instanceof Client) return "CLIENT";
+        if (utilizator instanceof Director) return "DIRECTOR";
         if (utilizator instanceof Ghid) return "GHID";
         if (utilizator instanceof AgentVanzari) return "AGENT";
         return "NECUNOSCUT";
@@ -343,6 +356,10 @@ public class UserService {
     // ============ PERSISTENCE METHODS ============
 
     private void incarcaUseriDinFisier() {
+        incarcaUseriDinFisier(true);  // default cu sincronizare pentru compatibilitate
+    }
+    
+    private void incarcaUseriDinFisier(boolean syncWithDB) {
         try {
             if (!Files.exists(Paths.get(CSV_FILE_PATH))) {
                 System.out.println("Fisierul users.csv nu exista. Va fi creat la primul sign up.");
@@ -387,13 +404,21 @@ public class UserService {
                                 agent.setParola(parola);
                                 utilizatoriMemorie.add(agent);
                                 break;
+                            case "DIRECTOR":
+                                // Creaza director cu Singleton pattern
+                                main.domain.Director director = main.domain.Director.getInstanceDirector(nume, prenume, email, "DIRECTOR", 15000);
+                                director.setParolaDirector(parola);
+                                utilizatoriMemorie.add(director);
+                                break;
                         }
                     }
                 }
                 System.out.println("Au fost incarcati " + utilizatoriMemorie.size() + " utilizatori din fisier.");
                 
-                // Sincronizeaza automat cu BD la pornire
-                syncAllWithDatabase();
+                // Sincronizeaza cu BD doar daca este specificat explicit
+                if (syncWithDB) {
+                    syncAllWithDatabase();
+                }
             }
         } catch (IOException e) {
             System.err.println("Eroare la citirea fisierului users.csv: " + e.getMessage());
@@ -457,6 +482,8 @@ public class UserService {
     private String getEmailUtilizator(Object utilizator) {
         if (utilizator instanceof Client) {
             return ((Client) utilizator).getEmail();
+        } else if (utilizator instanceof Director) {
+            return ((Director) utilizator).getEmail();
         } else if (utilizator instanceof Angajat) {
             return ((Angajat) utilizator).getEmail();
         } else if (utilizator instanceof Ghid) {
@@ -470,6 +497,8 @@ public class UserService {
     private String getNumeUtilizator(Object utilizator) {
         if (utilizator instanceof Client) {
             return ((Client) utilizator).getNume();
+        } else if (utilizator instanceof Director) {
+            return ((Director) utilizator).getNume();
         } else if (utilizator instanceof Angajat) {
             return ((Angajat) utilizator).getNume();
         } else if (utilizator instanceof Ghid) {
@@ -483,6 +512,8 @@ public class UserService {
     private String getPrenumeUtilizator(Object utilizator) {
         if (utilizator instanceof Client) {
             return ((Client) utilizator).getPrenume();
+        } else if (utilizator instanceof Director) {
+            return ((Director) utilizator).getPrenume();
         } else if (utilizator instanceof Angajat) {
             return ((Angajat) utilizator).getPrenume();
         } else if (utilizator instanceof Ghid) {
@@ -497,6 +528,9 @@ public class UserService {
         if (utilizator instanceof Client) {
             Client client = (Client) utilizator;
             return client.getEmail().equals(email) && client.getParola().equals(parola);
+        } else if (utilizator instanceof Director) {
+            Director director = (Director) utilizator;
+            return director.getEmail().equals(email) && director.getParola().equals(parola);
         } else if (utilizator instanceof Angajat) {
             Angajat angajat = (Angajat) utilizator;
             return angajat.getEmail().equals(email) && angajat.getParola().equals(parola);
@@ -525,7 +559,37 @@ public class UserService {
      * Compatibility method for UnifiedAuthController
      */
     public Object authenticateUser(String email, String parola) {
-        return autentifica(email, parola);
+        // Verifica credentialele in memorie mai intai
+        Object utilizatorMemorie = autentifica(email, parola);
+        if (utilizatorMemorie == null) {
+            return null;
+        }
+        
+        // Pentru clienti, incarca din BD pentru a avea rezervarile actuale
+        if (utilizatorMemorie instanceof Client && clientRepository != null) {
+            try {
+                Optional<Client> clientDB = clientRepository.findById(email);
+                if (clientDB.isPresent()) {
+                    Client clientActualizat = clientDB.get();
+                    // Seteaza parola pentru compatibilitate
+                    clientActualizat.setParola(((Client) utilizatorMemorie).getParola());
+                    
+                    // Actualizeaza utilizatorul curent cu cel din BD
+                    utilizatorCurent = clientActualizat;
+                    
+                    System.out.println("✅ Client incarcat din BD cu " + 
+                                     (clientActualizat.getRezervari() != null ? 
+                                      clientActualizat.getRezervari().size() : 0) + " rezervari");
+                    
+                    return clientActualizat;
+                }
+            } catch (Exception e) {
+                System.err.println("Eroare la incarcarea clientului din BD: " + e.getMessage());
+                // Fallback la utilizatorul din memorie
+            }
+        }
+        
+        return utilizatorMemorie;
     }
     
     /**
@@ -569,5 +633,204 @@ public class UserService {
      */
     public Object getCurrentUser() {
         return getUtilizatorCurent();
+    }
+
+    // =============== MANAGEMENT REZERVARI ===============
+    
+    /**
+     * Returneaza toate rezervarile din sistem
+     */
+    public List<main.domain.Rezervare> getToateRezervarile() {
+        List<main.domain.Rezervare> toateRezervarile = new ArrayList<>();
+        
+        if (clientRepository != null) {
+            try {
+                List<Client> clienti = clientRepository.findAll();
+                for (Client client : clienti) {
+                    if (client.getRezervari() != null) {
+                        toateRezervarile.addAll(client.getRezervari());
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Eroare la citirea rezervarilor: " + e.getMessage());
+            }
+        }
+        
+        return toateRezervarile;
+    }
+    
+    /**
+     * Returneaza rezervarile unui client specific
+     */
+    public List<main.domain.Rezervare> getRezervariByClient(String emailClient) {
+        if (clientRepository != null) {
+            try {
+                Optional<Client> clientOpt = clientRepository.findById(emailClient);
+                if (clientOpt.isPresent()) {
+                    Client client = clientOpt.get();
+                    return client.getRezervari() != null ? client.getRezervari() : new ArrayList<>();
+                }
+            } catch (Exception e) {
+                System.err.println("Eroare la citirea rezervarilor clientului: " + e.getMessage());
+            }
+        }
+        return new ArrayList<>();
+    }
+    
+    /**
+     * Cauta un client dupa email
+     */
+    public Client cautaClientDupaEmail(String email) {
+        if (clientRepository != null) {
+            try {
+                Optional<Client> clientOpt = clientRepository.findById(email);
+                return clientOpt.orElse(null);
+            } catch (Exception e) {
+                System.err.println("Eroare la cautarea clientului: " + e.getMessage());
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Actualizeaza un client (inclusiv rezervarile)
+     */
+    public boolean actualizeazaClient(Client clientActualizat) {
+        if (clientRepository != null) {
+            try {
+                clientRepository.update(clientActualizat);
+                
+                // Actualizeaza si in memorie daca exista
+                for (int i = 0; i < utilizatoriMemorie.size(); i++) {
+                    Object util = utilizatoriMemorie.get(i);
+                    if (util instanceof Client && ((Client) util).getEmail().equals(clientActualizat.getEmail())) {
+                        utilizatoriMemorie.set(i, clientActualizat);
+                        break;
+                    }
+                }
+                
+                System.out.println("✅ Client actualizat cu " + 
+                                 (clientActualizat.getRezervari() != null ? 
+                                  clientActualizat.getRezervari().size() : 0) + " rezervari");
+                return true;
+            } catch (Exception e) {
+                System.err.println("Eroare la actualizarea clientului: " + e.getMessage());
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Anuleaza o rezervare specifica
+     */
+    public boolean anuleazaRezervare(String emailClient, int indexRezervare) {
+        Client client = cautaClientDupaEmail(emailClient);
+        if (client != null && client.getRezervari() != null) {
+            List<main.domain.Rezervare> rezervari = client.getRezervari();
+            if (indexRezervare >= 0 && indexRezervare < rezervari.size()) {
+                rezervari.remove(indexRezervare);
+                return actualizeazaClient(client);
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Adauga o rezervare noua unui client
+     */
+    public boolean adaugaRezervare(String emailClient, main.domain.Rezervare rezervareNoua) {
+        Client client = cautaClientDupaEmail(emailClient);
+        if (client != null) {
+            client.adaugaRezervare(rezervareNoua);
+            return actualizeazaClient(client);
+        }
+        return false;
+    }
+    
+    // =============== STATISTICI ===============
+    
+    /**
+     * Returneaza numarul total de clienti
+     */
+    public int getTotalClienti() {
+        if (clientRepository != null) {
+            try {
+                return clientRepository.findAll().size();
+            } catch (Exception e) {
+                System.err.println("Eroare la numarul clientilor: " + e.getMessage());
+            }
+        }
+        return utilizatoriMemorie.stream().mapToInt(u -> u instanceof Client ? 1 : 0).sum();
+    }
+    
+    /**
+     * Returneaza numarul total de angajati
+     */
+    public int getTotalAngajati() {
+        if (angajatRepository != null) {
+            try {
+                return angajatRepository.findAll().size();
+            } catch (Exception e) {
+                System.err.println("Eroare la numarul angajatilor: " + e.getMessage());
+            }
+        }
+        return utilizatoriMemorie.stream().mapToInt(u -> u instanceof main.domain.Angajat ? 1 : 0).sum();
+    }
+    
+    /**
+     * Returneaza numarul total de rezervari
+     */
+    public int getTotalRezervari() {
+        return getToateRezervarile().size();
+    }
+    
+    /**
+     * Returneaza numarul de clienti activi (cu rezervari)
+     */
+    public int getClientiActivi() {
+        if (clientRepository != null) {
+            try {
+                List<Client> clienti = clientRepository.findAll();
+                int activi = 0;
+                for (Client client : clienti) {
+                    if (client.getRezervari() != null && !client.getRezervari().isEmpty()) {
+                        activi++;
+                    }
+                }
+                return activi;
+            } catch (Exception e) {
+                System.err.println("Eroare la numarul clientilor activi: " + e.getMessage());
+            }
+        }
+        return 0;
+    }
+    
+    /**
+     * Verifica daca un email exista la clienti
+     */
+    public boolean emailExistaLaClienti(String email) {
+        return cautaClientDupaEmail(email) != null;
+    }
+    
+    /**
+     * Cauta un angajat dupa email
+     */
+    public main.domain.Angajat cautaAngajatDupaEmail(String email) {
+        if (angajatRepository != null) {
+            try {
+                Optional<main.domain.Angajat> angajatOpt = angajatRepository.findById(email);
+                return angajatOpt.orElse(null);
+            } catch (Exception e) {
+                System.err.println("Eroare la cautarea angajatului: " + e.getMessage());
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Verifica daca un email exista la angajati
+     */
+    public boolean emailExistaLaAngajati(String email) {
+        return cautaAngajatDupaEmail(email) != null;
     }
 } 

@@ -2,6 +2,7 @@ package main.service;
 
 import main.domain.*;
 import main.service.UserService;
+import main.service.AuditService;
 import main.persistence.ClientRepository;
 import main.persistence.AngajatRepository;
 import java.util.List;
@@ -9,54 +10,64 @@ import java.util.ArrayList;
 
 public class ReportService {
     private UserService userService;
-    private ClientRepository clientRepository;
-    private AngajatRepository angajatRepository;
+    private AuditService auditService;
 
     public ReportService() {
         this.userService = new UserService();
-        this.clientRepository = new ClientRepository();
-        this.angajatRepository = new AngajatRepository();
+        this.auditService = AuditService.getInstance();
+    }
+    
+    /**
+     * Constructor cu UserService partajat
+     */
+    public ReportService(UserService sharedUserService) {
+        this.userService = sharedUserService;
+        this.auditService = AuditService.getInstance();
     }
 
     // Rapoarte pentru clienti
     public List<Client> getRaportClienti() {
         try {
-            return clientRepository.loadAll();
+            return userService.getClientRepository().loadAll();
         } catch (Exception e) {
             return new ArrayList<>();
         }
     }
 
     public int getTotalClienti() {
-        return getRaportClienti().size();
+        return userService.getTotalClienti();
     }
 
     public List<Client> getClientiCuRezervari() {
-        List<Client> clienti = getRaportClienti();
-        List<Client> clientiCuRezervari = new ArrayList<>();
-        
-        for (Client client : clienti) {
-            if (client.getRezervari() != null && !client.getRezervari().isEmpty()) {
-                clientiCuRezervari.add(client);
+        try {
+            List<Client> clienti = userService.getClientRepository().loadAll();
+            List<Client> clientiCuRezervari = new ArrayList<>();
+            
+            for (Client client : clienti) {
+                if (client.getRezervari() != null && !client.getRezervari().isEmpty()) {
+                    clientiCuRezervari.add(client);
+                }
             }
+            return clientiCuRezervari;
+        } catch (Exception e) {
+            return new ArrayList<>();
         }
-        return clientiCuRezervari;
     }
 
     // Rapoarte pentru angajati
     public List<Angajat> getRaportAngajati() {
         try {
-            return angajatRepository.loadAll();
+            return userService.getAngajatRepository().loadAll();
         } catch (Exception e) {
             return new ArrayList<>();
         }
     }
 
     public int getTotalAngajati() {
-        return getRaportAngajati().size();
+        return userService.getTotalAngajati();
     }
 
-    public List<Ghid> getGhizi() {
+    public List<Ghid> getRaportGhizi() {
         List<Angajat> angajati = getRaportAngajati();
         List<Ghid> ghizi = new ArrayList<>();
         
@@ -68,7 +79,7 @@ public class ReportService {
         return ghizi;
     }
 
-    public List<AgentVanzari> getAgentiVanzari() {
+    public List<AgentVanzari> getRaportAgenti() {
         List<Angajat> angajati = getRaportAngajati();
         List<AgentVanzari> agenti = new ArrayList<>();
         
@@ -80,7 +91,20 @@ public class ReportService {
         return agenti;
     }
 
-    // Calculeaza statistici salariale
+    // Rapoarte pentru rezervari
+    public List<Rezervare> getRaportRezervari() {
+        return userService.getToateRezervarile();
+    }
+
+    public int getTotalRezervari() {
+        return userService.getTotalRezervari();
+    }
+
+    public List<Rezervare> getRezervariClient(String emailClient) {
+        return userService.getRezervariByClient(emailClient);
+    }
+
+    // Statistici generale
     public double getSalariuMediuAngajati() {
         List<Angajat> angajati = getRaportAngajati();
         if (angajati.isEmpty()) {
@@ -95,6 +119,24 @@ public class ReportService {
         return totalSalarii / angajati.size();
     }
 
+    public int getClientiActivi() {
+        return userService.getClientiActivi();
+    }
+
+    public double getProcentClientiActivi() {
+        int totalClienti = getTotalClienti();
+        if (totalClienti == 0) {
+            return 0.0;
+        }
+        return (double) getClientiActivi() / totalClienti * 100;
+    }
+    
+    // Getter pentru UserService
+    public UserService getUserService() {
+        return userService;
+    }
+
+    // Calculeaza statistici salariale
     public double getTotalSalarii() {
         List<Angajat> angajati = getRaportAngajati();
         double total = 0.0;
@@ -104,20 +146,6 @@ public class ReportService {
         }
         
         return total;
-    }
-
-    // Statistici rezervari
-    public int getTotalRezervari() {
-        List<Client> clienti = getRaportClienti();
-        int totalRezervari = 0;
-        
-        for (Client client : clienti) {
-            if (client.getRezervari() != null) {
-                totalRezervari += client.getRezervari().size();
-            }
-        }
-        
-        return totalRezervari;
     }
 
     // Calculeaza rata de conversie (clienti cu rezervari vs total clienti)
@@ -147,8 +175,8 @@ public class ReportService {
         // Sectiunea Angajati
         raport.append("2. STATISTICI ANGAJAtI:\n");
         raport.append("   - Total angajati: ").append(getTotalAngajati()).append("\n");
-        raport.append("   - Ghizi: ").append(getGhizi().size()).append("\n");
-        raport.append("   - Agenti vanzari: ").append(getAgentiVanzari().size()).append("\n");
+        raport.append("   - Ghizi: ").append(getRaportGhizi().size()).append("\n");
+        raport.append("   - Agenti vanzari: ").append(getRaportAgenti().size()).append("\n");
         raport.append("   - Salariu mediu: ").append(String.format("%.2f", getSalariuMediuAngajati())).append(" RON\n");
         raport.append("   - Total salarii: ").append(String.format("%.2f", getTotalSalarii())).append(" RON\n\n");
         
